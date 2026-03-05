@@ -90,6 +90,7 @@ const HeaderRight = ({ toolId }: { toolId: string }) => {
             size={24}
             onPress={() => toggleFavorite(toolId)}
         />
+        // Hello
     );
 };
 
