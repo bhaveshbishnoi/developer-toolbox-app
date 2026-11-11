@@ -1,42 +1,57 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useTheme } from 'react-native-paper';
 
 interface ScreenWrapperProps {
     children: React.ReactNode;
     scrollable?: boolean;
+    contentContainerStyle?: any;
+    header?: React.ReactNode;
 }
 
-export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, scrollable = true }) => {
+export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
+    children,
+    scrollable = true,
+    contentContainerStyle,
+    header,
+}) => {
     const theme = useTheme();
 
-    const content = (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            {children}
-        </View>
+    return (
+        <KeyboardAvoidingView
+            style={[styles.root, { backgroundColor: theme.colors.background }]}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+            {header}
+            {scrollable ? (
+                <ScrollView
+                    contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ backgroundColor: theme.colors.background }}
+                >
+                    {children}
+                </ScrollView>
+            ) : (
+                <View style={[styles.staticContent, contentContainerStyle]}>
+                    {children}
+                </View>
+            )}
+        </KeyboardAvoidingView>
     );
-
-    if (scrollable) {
-        return (
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                style={{ backgroundColor: theme.colors.background }}
-            >
-                {content}
-            </ScrollView>
-        );
-    }
-
-    return content;
 };
 
 const styles = StyleSheet.create({
-    container: {
+    root: {
         flex: 1,
-        padding: 16,
     },
     scrollContent: {
-        flexGrow: 1,
+        padding: 16,
+        paddingBottom: 40,
+    },
+    staticContent: {
+        flex: 1,
+        padding: 16,
     },
 });

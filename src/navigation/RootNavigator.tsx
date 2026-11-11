@@ -3,19 +3,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { IconButton, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
 import { MainTabParamList, RootStackParamList } from './types';
 import { HomeScreen } from '../screens/HomeScreen';
+import { DeviceHubScreen } from '../screens/DeviceHubScreen';
 import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 import { useAppStore } from '../store';
 
-// Temporary Settings Screen
-import { View, Text } from 'react-native';
-const SettingsScreen = () => <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff' }}>Settings</Text></View>;
-
-// Tools
+// Existing 10 tools
 import { JsonFormatter } from '../tools/JsonFormatter';
 import { Base64Encoder } from '../tools/Base64Encoder';
 import { JwtDecoder } from '../tools/JwtDecoder';
@@ -26,6 +23,14 @@ import { ApiTester } from '../tools/ApiTester';
 import { UuidGenerator } from '../tools/UuidGenerator';
 import { TimestampConverter } from '../tools/TimestampConverter';
 import { UrlEncoder } from '../tools/UrlEncoder';
+
+// Six New Android Feature Modules
+import { DeviceInfo } from '../tools/DeviceInfo';
+import { SensorTester } from '../tools/SensorTester';
+import { NetworkAnalyzer } from '../tools/NetworkAnalyzer';
+import { QrToolkit } from '../tools/QrToolkit';
+import { HardwareTester } from '../tools/HardwareTester';
+import { AppInspector } from '../tools/AppInspector';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -41,38 +46,66 @@ const MainTabs = () => {
                 tabBarStyle: {
                     backgroundColor: theme.colors.surface,
                     borderTopColor: theme.colors.outline,
+                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 6,
                 },
                 tabBarActiveTintColor: theme.colors.primary,
                 tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+                tabBarLabelStyle: {
+                    fontSize: 11,
+                    fontWeight: '600',
+                },
             }}
         >
             <Tab.Screen
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <MaterialCommunityIcons name="home-outline" color={color} size={size} />,
-                    title: 'Dashboard'
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="view-dashboard-outline" color={color} size={size} />
+                    ),
+                    title: 'Dashboard',
+                }}
+            />
+            <Tab.Screen
+                name="DeviceHub"
+                component={DeviceHubScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="android" color={color} size={size} />
+                    ),
+                    title: 'Android Tools',
                 }}
             />
             <Tab.Screen
                 name="Favorites"
                 component={FavoritesScreen}
                 options={{
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <MaterialCommunityIcons name="heart-outline" color={color} size={size} />,
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="heart-outline" color={color} size={size} />
+                    ),
+                    title: 'Favorites',
                 }}
             />
             <Tab.Screen
                 name="History"
                 component={HistoryScreen}
                 options={{
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <MaterialCommunityIcons name="history" color={color} size={size} />,
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="history" color={color} size={size} />
+                    ),
+                    title: 'History',
                 }}
             />
             <Tab.Screen
                 name="Settings"
                 component={SettingsScreen}
                 options={{
-                    tabBarIcon: ({ color, size }: { color: string; size: number }) => <MaterialCommunityIcons name="cog-outline" color={color} size={size} />,
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons name="cog-outline" color={color} size={size} />
+                    ),
+                    title: 'Settings',
                 }}
             />
         </Tab.Navigator>
@@ -85,40 +118,51 @@ const HeaderRight = ({ toolId }: { toolId: string }) => {
     const isFav = favorites.includes(toolId);
     return (
         <IconButton
-            icon={isFav ? "heart" : "heart-outline"}
+            icon={isFav ? 'heart' : 'heart-outline'}
             iconColor={isFav ? theme.colors.error : theme.colors.onSurface}
-            size={24}
+            size={22}
             onPress={() => toggleFavorite(toolId)}
         />
-        // Hello
     );
 };
 
 export const RootNavigator = () => {
     const theme = useTheme();
 
+    const screenOpts = (title: string, toolId: string) => ({
+        title,
+        headerRight: () => <HeaderRight toolId={toolId} />,
+    });
+
     return (
         <Stack.Navigator
             screenOptions={{
                 headerStyle: { backgroundColor: theme.colors.surface },
                 headerTintColor: theme.colors.onSurface,
+                headerTitleStyle: { fontWeight: 'bold', fontSize: 17 },
             }}
         >
-            <Stack.Screen
-                name="MainTabs"
-                component={MainTabs}
-                options={{ headerShown: false }}
-            />
-            <Stack.Screen name="JsonFormatter" component={JsonFormatter} options={{ title: 'JSON Formatter', headerRight: () => <HeaderRight toolId="JsonFormatter" /> }} />
-            <Stack.Screen name="Base64Encoder" component={Base64Encoder} options={{ title: 'Base64 Encoder', headerRight: () => <HeaderRight toolId="Base64Encoder" /> }} />
-            <Stack.Screen name="JwtDecoder" component={JwtDecoder} options={{ title: 'JWT Decoder', headerRight: () => <HeaderRight toolId="JwtDecoder" /> }} />
-            <Stack.Screen name="RegexTester" component={RegexTester} options={{ title: 'Regex Tester', headerRight: () => <HeaderRight toolId="RegexTester" /> }} />
-            <Stack.Screen name="ColorConverter" component={ColorConverter} options={{ title: 'Color Converter', headerRight: () => <HeaderRight toolId="ColorConverter" /> }} />
-            <Stack.Screen name="HashGenerator" component={HashGenerator} options={{ title: 'Hash Generator', headerRight: () => <HeaderRight toolId="HashGenerator" /> }} />
-            <Stack.Screen name="ApiTester" component={ApiTester} options={{ title: 'API Tester', headerRight: () => <HeaderRight toolId="ApiTester" /> }} />
-            <Stack.Screen name="UuidGenerator" component={UuidGenerator} options={{ title: 'UUID Generator', headerRight: () => <HeaderRight toolId="UuidGenerator" /> }} />
-            <Stack.Screen name="TimestampConverter" component={TimestampConverter} options={{ title: 'Timestamp Converter', headerRight: () => <HeaderRight toolId="TimestampConverter" /> }} />
-            <Stack.Screen name="UrlEncoder" component={UrlEncoder} options={{ title: 'URL Encoder', headerRight: () => <HeaderRight toolId="UrlEncoder" /> }} />
+            <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+
+            {/* 6 New Android Modules */}
+            <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={screenOpts('Device Information', 'DeviceInfo')} />
+            <Stack.Screen name="SensorTester" component={SensorTester} options={screenOpts('Sensor Tester', 'SensorTester')} />
+            <Stack.Screen name="NetworkAnalyzer" component={NetworkAnalyzer} options={screenOpts('Network Analyzer', 'NetworkAnalyzer')} />
+            <Stack.Screen name="QrToolkit" component={QrToolkit} options={screenOpts('QR Code Toolkit', 'QrToolkit')} />
+            <Stack.Screen name="HardwareTester" component={HardwareTester} options={screenOpts('Hardware Tester', 'HardwareTester')} />
+            <Stack.Screen name="AppInspector" component={AppInspector} options={screenOpts('App Inspector', 'AppInspector')} />
+
+            {/* 10 Existing Tools */}
+            <Stack.Screen name="JsonFormatter" component={JsonFormatter} options={screenOpts('JSON Formatter', 'JsonFormatter')} />
+            <Stack.Screen name="Base64Encoder" component={Base64Encoder} options={screenOpts('Base64 Encoder', 'Base64Encoder')} />
+            <Stack.Screen name="JwtDecoder" component={JwtDecoder} options={screenOpts('JWT Decoder', 'JwtDecoder')} />
+            <Stack.Screen name="RegexTester" component={RegexTester} options={screenOpts('Regex Tester', 'RegexTester')} />
+            <Stack.Screen name="ColorConverter" component={ColorConverter} options={screenOpts('Color Converter', 'ColorConverter')} />
+            <Stack.Screen name="HashGenerator" component={HashGenerator} options={screenOpts('Hash Generator', 'HashGenerator')} />
+            <Stack.Screen name="ApiTester" component={ApiTester} options={screenOpts('API Tester', 'ApiTester')} />
+            <Stack.Screen name="UuidGenerator" component={UuidGenerator} options={screenOpts('UUID Generator', 'UuidGenerator')} />
+            <Stack.Screen name="TimestampConverter" component={TimestampConverter} options={screenOpts('Timestamp Converter', 'TimestampConverter')} />
+            <Stack.Screen name="UrlEncoder" component={UrlEncoder} options={screenOpts('URL Encoder / Parser', 'UrlEncoder')} />
         </Stack.Navigator>
     );
 };

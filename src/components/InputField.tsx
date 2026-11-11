@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, useTheme, Text, IconButton } from 'react-native-paper';
+import { View, StyleSheet, Platform } from 'react-native';
+import { TextInput, useTheme, Text, IconButton, Chip } from 'react-native-paper';
 import * as Clipboard from 'expo-clipboard';
 
 interface InputFieldProps {
@@ -12,6 +12,10 @@ interface InputFieldProps {
     onPaste?: (text: string) => void;
     autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
     autoCorrect?: boolean;
+    monospace?: boolean;
+    sampleText?: string;
+    onLoadSample?: () => void;
+    helperText?: string;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -22,7 +26,11 @@ export const InputField: React.FC<InputFieldProps> = ({
     placeholder,
     onPaste,
     autoCapitalize = 'none',
-    autoCorrect = false
+    autoCorrect = false,
+    monospace = false,
+    sampleText,
+    onLoadSample,
+    helperText,
 }) => {
     const theme = useTheme();
 
@@ -32,7 +40,7 @@ export const InputField: React.FC<InputFieldProps> = ({
             if (onPaste) {
                 onPaste(text);
             } else {
-                onChangeText(value ? value + text : text); // Append or set? usually just insert cursor, but full set is fine
+                onChangeText(value ? value + text : text);
             }
         }
     };
@@ -41,17 +49,59 @@ export const InputField: React.FC<InputFieldProps> = ({
         onChangeText('');
     };
 
+    const handleSetSample = () => {
+        if (onLoadSample) {
+            onLoadSample();
+        } else if (sampleText) {
+            onChangeText(sampleText);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text variant="titleMedium" style={{ color: theme.colors.primary }}>{label}</Text>
-                <View style={styles.actions}>
+                <View style={styles.labelRow}>
+                    <Text variant="titleSmall" style={{ color: theme.colors.primary, fontWeight: '700' }}>
+                        {label}
+                    </Text>
                     {value.length > 0 && (
-                        <IconButton icon="close" size={20} onPress={handleClear} />
+                        <Text variant="labelSmall" style={[styles.charCount, { color: theme.colors.onSurfaceVariant }]}>
+                            {value.length} chars
+                        </Text>
                     )}
-                    <IconButton icon="content-paste" size={20} onPress={handlePaste} />
+                </View>
+
+                <View style={styles.actions}>
+                    {(sampleText || onLoadSample) && value.length === 0 && (
+                        <Chip
+                            compact
+                            mode="outlined"
+                            style={styles.sampleChip}
+                            textStyle={{ fontSize: 11, color: theme.colors.primary }}
+                            onPress={handleSetSample}
+                        >
+                            Sample
+                        </Chip>
+                    )}
+                    {value.length > 0 && (
+                        <IconButton
+                            icon="close-circle-outline"
+                            size={18}
+                            onPress={handleClear}
+                            style={styles.actionBtn}
+                            iconColor={theme.colors.onSurfaceVariant}
+                        />
+                    )}
+                    <IconButton
+                        icon="content-paste"
+                        size={18}
+                        onPress={handlePaste}
+                        style={styles.actionBtn}
+                        iconColor={theme.colors.primary}
+                    />
                 </View>
             </View>
+
             <TextInput
                 mode="outlined"
                 value={value}
@@ -59,34 +109,74 @@ export const InputField: React.FC<InputFieldProps> = ({
                 multiline={multiline}
                 numberOfLines={multiline ? 6 : 1}
                 placeholder={placeholder}
-                style={[styles.input, multiline && styles.multilineInput]}
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                style={[
+                    styles.input,
+                    multiline && styles.multilineInput,
+                    monospace && { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 13 },
+                ]}
                 textColor={theme.colors.onSurface}
-                theme={{ colors: { background: theme.colors.surfaceVariant } }}
+                outlineColor={theme.colors.outline}
+                activeOutlineColor={theme.colors.primary}
+                theme={{
+                    colors: {
+                        background: theme.colors.surfaceVariant,
+                    },
+                }}
                 autoCapitalize={autoCapitalize}
                 autoCorrect={autoCorrect}
             />
+            {helperText ? (
+                <Text variant="bodySmall" style={[styles.helper, { color: theme.colors.onSurfaceVariant }]}>
+                    {helperText}
+                </Text>
+            ) : null}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginVertical: 12,
+        marginVertical: 8,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
-        paddingHorizontal: 4,
+        marginBottom: 6,
+        paddingHorizontal: 2,
+    },
+    labelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    charCount: {
+        opacity: 0.8,
     },
     actions: {
         flexDirection: 'row',
+        alignItems: 'center',
+    },
+    sampleChip: {
+        marginRight: 4,
+        height: 26,
+    },
+    actionBtn: {
+        margin: 0,
+        padding: 0,
+        width: 32,
+        height: 32,
     },
     input: {
+        borderRadius: 8,
     },
     multilineInput: {
-        minHeight: 120,
+        minHeight: 110,
         textAlignVertical: 'top',
-    }
+    },
+    helper: {
+        marginTop: 4,
+        paddingHorizontal: 4,
+    },
 });
